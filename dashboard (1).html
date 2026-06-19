@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Dashboard</title>
+
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 20px;
+        background-color: #f4f6f9;
+        color: #333;
+    }
+
+    h1 {
+        color: #2c3e50;
+        text-align: center;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        position: relative;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    select,
+    textarea,
+    input,
+    button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 16px;
+    }
+
+    textarea {
+        height: 120px;
+        resize: vertical;
+    }
+
+    button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background-color: #2980b9;
+    }
+
+    .secondary-btn {
+        background-color: #2ecc71;
+    }
+
+    .secondary-btn:hover {
+        background-color: #27ae60;
+    }
+
+    .projector-btn {
+        background-color: #9b59b6;
+    }
+
+    .projector-btn:hover {
+        background-color: #8e44ad;
+    }
+
+    .exit-btn {
+        background-color: #e74c3c;
+        display: none;
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        width: auto;
+        z-index: 99999;
+    }
+
+    .exit-btn:hover {
+        background-color: #c0392b;
+    }
+
+    .output-container {
+        margin-top: 30px;
+        width: 100%;
+    }
+    .day-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+.day-buttons button {
+    flex: 1;
+}
+
+    .groups-grid {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 15px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .group-card {
+        background: #ecf0f1;
+        border-left: 5px solid #3498db;
+        padding: 15px;
+        border-radius: 4px;
+        box-sizing: border-box;
+        width: calc((100% - 30px) / 3);
+        min-width: 250px;
+    }
+
+    .group-title {
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 18px;
+        border-bottom: 1px solid #bdc3c7;
+        padding-bottom: 4px;
+    }
+
+    .student-list {
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    /* PROJECTOR MODE */
+
+    body.projector-mode {
+        background-color: #2c3e50;
+        margin: 0;
+        padding: 30px;
+    }
+
+    body.projector-mode .container {
+        max-width: 100%;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+    }
+
+    body.projector-mode .setup-ui,
+    body.projector-mode h1,
+    body.projector-mode hr {
+        display: none !important;
+    }
+
+    body.projector-mode .group-card {
+        background: white;
+        border-left-width: 8px;
+        padding: 15px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    body.projector-mode .group-title {
+        font-size: 25px;
+        color: #2980b9;
+    }
+
+    body.projector-mode .student-list {
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.3;
+    }
+
+    /* TODAY'S QUESTION PANEL */
+
+    #todaysQuestionPanel {
+        display: none;
+    }
+
+    body.projector-mode #todaysQuestionPanel {
+        display: block;
+        margin-top: 20px;
+        background: white;
+        border-left: 8px solid #f39c12;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+    }
+
+    #questionTitle {
+        font-size: 25px;
+        font-weight: bold;
+        color: #d35400;
+        margin-bottom: 10px;
+    }
+
+    #questionText {
+        font-size: 18px;
+        line-height: 1.15;
+        font-weight: 500;
+    }
+</style>
+</head>
+
+<body>
+
+<button class="exit-btn" id="exitBtn" onclick="toggleProjectorMode()">
+    Exit Projector Mode (or Press Esc)
+</button>
+
+<div class="container">
+    <h1>Classroom Dashboard</h1>
+
+    <div class="setup-ui">
+
+        <div class="form-group">
+            <label for="periodSelect">Select Class Period:</label>
+            <select id="periodSelect" onchange="loadPeriodData()">
+                <option value="period1">Period 1</option>
+                <option value="period2">Period 2</option>
+                <option value="period3">Period 3</option>
+                <option value="period4">Period 4</option>
+                <option value="period5">Period 5</option>
+                <option value="period6">Period 6</option>
+                <option value="period7">Period 7</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="rosterInput">Student Roster (One name per line):</label>
+            <textarea id="rosterInput" placeholder="John Doe&#10;Jane Smith&#10;Alex Jones"></textarea>
+        </div>
+
+        <div class="form-group">
+           <button type="button" class="toggle-link" id="separationToggleBtn" onclick="toggleSeparationPanel()">
+                🔒 Show Separation Settings ▼
+            </button>
+            <div id="separationPanel" style="display:none;">
+                <label for="separationInput">Students Who Should NOT Be Grouped Together (one set per line, names separated by commas):</label>
+                <textarea id="separationInput" placeholder="John Doe, Jane Smith&#10;Alex Jones, Sam Lee, Pat Kim"></textarea>
+            </div>
+            <button class="secondary-btn" onclick="savePeriodData()">
+                Save Roster for Selected Period
+            </button>
+
+        </div>
+<hr>
+
+<h2>Daily Question Settings</h2>
+
+<div class="form-group">
+<label>Current School Day</label>
+<input type="number" id="schoolDayInput" min="1" value="1">
+<button class="secondary-btn" onclick="saveSchoolDay()">Save School Day</button>
+<div class="day-buttons">
+    <button onclick="changeDay(-1)">Previous Day</button>
+    <button onclick="changeDay(1)">Next Day</button>
+</div>
+</div>
+        <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
+
+        <h2>Generate Random Groups</h2>
+
+        <div class="form-group">
+            <label for="groupSize">
+                Desired Group Size:
+            </label>
+
+            <input type="number" id="groupSize" min="1" value="3">
+
+            <button onclick="generateGroups()">Generate Groups</button>
+
+            <button class="projector-btn" onclick="toggleProjectorMode()">
+                Enter Projector Mode 📺
+            </button>
+        </div>
+
+    </div>
+
+    <div class="output-container" id="groupsDisplay"></div>
+
+    <div id="todaysQuestionPanel">
+        <div id="questionTitle">Today's Question</div>
+        <div id="questionText"></div>
+    </div>
+
+</div>
+
+<script>
+
+const dailyQuestions = [
+    "Would you rather have more time or more money? Why?",
+    "What is something people would be surprised to learn about you?",
+    "What is a problem in the world you wish someone would solve?",
+    "Which is more important: talent or hard work?",
+    "What advice would you give your younger self?",
+    "What's your favorite emoji to use?",
+    "What is something you're grateful for today?",
+    "If you could invent a new holiday, what would it celebrate?",
+    "What is one habit that helps you be successful?",
+    "What's the best pizza crust style?",
+    "What are the best and worst bottled water brands?",
+    "What makes a teacher memorable?",
+    "If you could travel anywhere, where would you go and why?",
+    "What is your dream job?",
+    "Was math invented or discovered?",
+    "What's an unpopular opinion you have?",
+    "What's a habit you'd like to build?",
+    "Is it better to be early or on time?",
+    "Is it better to have many friends or a few close friends?",
+    "Do you have any hidden talents?",
+    "What would your dream house include?",
+    "What's a phrase people say too much right now?",
+    "What is a hobby you'd like to try?",
+    "What's something you've gotten much better at over the years?",
+    "What is your biggest pet peeve?",
+    "What are acceptable tv volume numbers?",
+    "If you could live in any decade, which would you choose?",
+    "What's a skill you learned outside of school that's been valuable?",
+    "If you could switch lives with someone for a day, who would it be?",
+    "What motivates students more: grades, competition, or interest?",
+    "What's a movie everyone should watch once?",
+    "How many times is too many times to hit snooze?",
+    "What is the best school lunch you've ever had?",
+    "What motivates you when you don't feel motivated?",
+    "What's a hill you're willing to die on?",
+    "If you got $10,000 today, what's the first thing you'd do?",
+    "What is one thing you are excited about?",
+    "What's the best type of chair?",
+    "If you had to eat one meal every day for a year, what would it be?",
+    "What's one school assignment you've actually enjoyed?",
+    "If you had to live in one store for a month, which store would you choose?",
+    "If you woke up famous tomorrow, what would you be famous for?",
+    "What should every student learn before graduating?",
+    "What's a song you never skip?",
+    "If grades disappeared, would students learn more or less?",
+    "Is it possible to be too competitive?",
+    "What's the best fictional universe to live in?",
+    "What's something you've changed your mind about recently?",
+    "What is the best shoe brand?",
+    "How many times is too many times to hit snooze?",
+    "Would you rather have unlimited free time or unlimited energy? Why?",
+    "What is something small that makes your day better?",
+    "What is the best breakfast food?",
+    "What is one thing that made you smile recently?",
+    "What's the perfect hoodie weather?",
+    "What is one thing you want to accomplish this year?",
+    "What is the most underrated food?",
+    "What is something that instantly improves your mood?",
+    "What is the hardest thing about being a student today?",
+    "What movie or book deserves a sequel?",
+    "What is the most interesting place you've visited?",
+    "If you could relive one day from your life, which day would you choose?",
+    "Would you rather live in a city or the countryside? Why?",
+    "What is something you do that helps reduce stress?",
+    "If you could remove one inconvenience from life, what would it be?",
+    "What's the most comfortable clothing item you own?",
+    "What is the most random fact you know?",
+    "Sweet candy or sour candy?",
+    "What is something you could talk about for hours?",
+    "What is the best way to spend a rainy day?",
+    "What is the perfect amount of sleep?",
+    "What is the best season and why?",
+    "What is something people worry about too much?",
+    "What is one word that describes your week?",
+    "If you could visit any place in the universe, where would you go?",
+    "What is something you are curious about right now?",
+    "What is the worst day of the week?",
+    "Would you rather be extremely creative or extremely logical? Why?",
+    "Would you rather have the ability to see 10 years into the future or 10 years into the past? Why?",
+    "If you had to start a business tomorrow, what would it be?", 
+    "What is something you think is underrated?",
+    "Would you rather never have homework again or never have tests again? Why?",
+    "If you could redesign your bedroom, what would you add?",
+    "Would you rather be the funniest person in the room or the smartest person in the room? Why?",
+    "Would you rather have unlimited money but no free time or unlimited free time but less money? Why?",
+    "Would you rather have a personal chef or a personal assistant? Why?",
+    "Would you rather always know the right answer or always know the right question? Why?",
+    "Would you rather have the ability to pause time or replay your favorite memories? Why?",
+    "What is something you think makes a great teacher?",
+    "Would you rather have the ability to control the weather or control your dreams? Why?",
+    "If you could relive one year of your life, which year would you choose?",
+    "Would you rather explore the deepest ocean or outer space? Why?",
+    "If you could create the perfect weekend, what would it include?",
+    "Would you rather be able to remember everything or forget anything you want? Why?",
+    "What is something you think is worth saving money for?",
+    "Would you rather have unlimited creativity or unlimited confidence? Why?",
+    "If you could make one thing free forever, what would it be?",
+    "What is something you wish you had more time to do?",
+    "Would you rather be able to talk to your younger self or your older self? Why?",
+    "Would you rather always have the perfect outfit or the perfect meal? Why?",
+    "Would you rather be able to travel anywhere instantly or never need sleep? Why?",
+    "What is something you think makes a classroom better?",
+    "What is a small inconvenience that annoys you way more than it should?",
+    "What is the best month of the year?"
+]
+window.onload = function () {
+
+    loadPeriodData();
+    loadSchoolDay();
+
+    document.addEventListener('keydown', function (event) {
+        if (
+            event.key === "Escape" &&
+            document.body.classList.contains('projector-mode')
+        ) {
+            toggleProjectorMode();
+        }
+    });
+};
+
+function loadSchoolDay(){
+const saved=localStorage.getItem("schoolDay");
+if(saved) schoolDay=parseInt(saved);
+document.getElementById("schoolDayInput").value=schoolDay;
+updateTodaysQuestion();
+}
+
+function saveSchoolDay(){
+schoolDay=parseInt(document.getElementById("schoolDayInput").value)||1;
+localStorage.setItem("schoolDay",schoolDay);
+updateTodaysQuestion();
+}
+
+function changeDay(amount){
+schoolDay=Math.max(1,schoolDay+amount);
+document.getElementById("schoolDayInput").value=schoolDay;
+localStorage.setItem("schoolDay",schoolDay);
+updateTodaysQuestion();
+}
+
+function updateTodaysQuestion(){
+const q=(schoolDay-1)%dailyQuestions.length;
+document.getElementById("questionTitle").innerHTML=`Today's Question: Day ${schoolDay}</span>`;
+document.getElementById("questionText").textContent=dailyQuestions[q];
+} 
+
+function toggleProjectorMode() {
+
+    const displayArea =
+        document.getElementById('groupsDisplay').innerHTML.trim();
+
+    if (
+        !document.body.classList.contains('projector-mode') &&
+        displayArea === ""
+    ) {
+        alert("Please generate groups first before entering Projector Mode!");
+        return;
+    }
+
+    document.body.classList.toggle('projector-mode');
+
+    const exitBtn = document.getElementById('exitBtn');
+
+    if (document.body.classList.contains('projector-mode')) {
+        exitBtn.style.display = 'block';
+    } else {
+        exitBtn.style.display = 'none';
+    }
+}
+
+function savePeriodData() {
+
+    const selectedPeriod =
+        document.getElementById('periodSelect').value;
+
+    const rosterText =
+        document.getElementById('rosterInput').value;
+
+    const separationText =
+        document.getElementById('separationInput').value;
+
+    localStorage.setItem(selectedPeriod, rosterText);
+    localStorage.setItem(selectedPeriod + "_separations", separationText);
+
+    alert(
+        "Roster and separation list saved successfully for " +
+        selectedPeriod.replace("period", "Period ") +
+        "!"
+    );
+}
+
+function loadPeriodData() {
+
+    const selectedPeriod =
+        document.getElementById('periodSelect').value;
+
+    const savedRoster =
+        localStorage.getItem(selectedPeriod);
+
+    const savedSeparations =
+        localStorage.getItem(selectedPeriod + "_separations");
+
+    if (savedRoster !== null) {
+        document.getElementById('rosterInput').value = savedRoster;
+    } else {
+        document.getElementById('rosterInput').value = "";
+    }
+
+    if (savedSeparations !== null) {
+        document.getElementById('separationInput').value = savedSeparations;
+    } else {
+        document.getElementById('separationInput').value = "";
+    }
+
+    collapseSeparationPanel();
+
+    document.getElementById('groupsDisplay').innerHTML = "";
+}
+function toggleSeparationPanel() {
+
+    const panel = document.getElementById('separationPanel');
+    const btn = document.getElementById('separationToggleBtn');
+
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        btn.innerHTML = '🔒 Hide Separation Settings ▲';
+    } else {
+        collapseSeparationPanel();
+    }
+}
+
+function collapseSeparationPanel() {
+
+    const panel = document.getElementById('separationPanel');
+    const btn = document.getElementById('separationToggleBtn');
+
+    panel.style.display = 'none';
+    btn.innerHTML = '🔒 Show Separation Settings ▼';
+}
+
+function shuffleArray(array) {
+
+    for (let i = array.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] =
+            [array[j], array[i]];
+    }
+
+    return array;
+}
+
+function parseSeparationConstraints(text) {
+
+    return text
+        .split('\n')
+        .map(line => line.split(',').map(name => name.trim()).filter(name => name.length > 0))
+        .filter(group => group.length > 1);
+}
+
+function countConflicts(student, group, constraints) {
+
+    let count = 0;
+
+    for (const constraintGroup of constraints) {
+        if (constraintGroup.includes(student)) {
+            for (const member of group) {
+                if (member !== student && constraintGroup.includes(member)) {
+                    count++;
+                }
+            }
+        }
+    }
+
+    return count;
+}
+
+function generateGroups() {
+
+    const rosterText =
+        document.getElementById('rosterInput').value.trim();
+
+    const sizeInput =
+        parseInt(document.getElementById('groupSize').value);
+
+    const separationText =
+        document.getElementById('separationInput').value;
+
+    const displayArea =
+        document.getElementById('groupsDisplay');
+
+    displayArea.innerHTML = "";
+
+    if (!rosterText) {
+        alert("Please enter or save a student roster first!");
+        return;
+    }
+
+    if (isNaN(sizeInput) || sizeInput < 1) {
+        alert("Please enter a valid group size of 1 or more.");
+        return;
+    }
+
+    let students = rosterText
+        .split('\n')
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+    if (students.length < sizeInput) {
+        alert(
+            "You don't have enough students to make a group of that size!"
+        );
+        return;
+    }
+
+    const constraints = parseSeparationConstraints(separationText);
+
+    students = shuffleArray(students);
+
+    const totalStudents = students.length;
+    const numberOfGroups = Math.floor(totalStudents / sizeInput);
+    const leftoverCount = totalStudents - (numberOfGroups * sizeInput);
+
+    let groups = [];
+    let groupTargetSizes = [];
+
+    for (let i = 0; i < numberOfGroups; i++) {
+        groups.push([]);
+        groupTargetSizes.push(sizeInput + (i < leftoverCount ? 1 : 0));
+    }
+
+    const studentsWithUnresolvedConflicts = [];
+
+    students.forEach(student => {
+
+        // Prefer groups that aren't full yet and create no conflict.
+        let candidateIndices = [];
+
+        for (let i = 0; i < groups.length; i++) {
+            if (
+                groups[i].length < groupTargetSizes[i] &&
+                countConflicts(student, groups[i], constraints) === 0
+            ) {
+                candidateIndices.push(i);
+            }
+        }
+
+        if (candidateIndices.length > 0) {
+            // Among conflict-free options, pick the currently smallest group to keep sizes balanced.
+            candidateIndices.sort((a, b) => groups[a].length - groups[b].length);
+            groups[candidateIndices[0]].push(student);
+            return;
+        }
+
+        // No conflict-free group available; fall back to whichever open group has the fewest conflicts.
+        let openIndices = [];
+        for (let i = 0; i < groups.length; i++) {
+            if (groups[i].length < groupTargetSizes[i]) {
+                openIndices.push(i);
+            }
+        }
+        if (openIndices.length === 0) {
+            openIndices = groups.map((_, i) => i);
+        }
+
+        let bestIndex = openIndices[0];
+        let bestConflictCount = countConflicts(student, groups[bestIndex], constraints);
+
+        for (const i of openIndices) {
+            const conflictCount = countConflicts(student, groups[i], constraints);
+            if (conflictCount < bestConflictCount) {
+                bestIndex = i;
+                bestConflictCount = conflictCount;
+            }
+        }
+
+        groups[bestIndex].push(student);
+
+        if (bestConflictCount > 0) {
+            studentsWithUnresolvedConflicts.push(student);
+        }
+    });
+
+    const gridWrapper = document.createElement('div');
+    gridWrapper.className = 'groups-grid';
+
+    displayArea.appendChild(gridWrapper);
+
+    groups.forEach((currentGroup, index) => {
+
+        const card = document.createElement('div');
+        card.className = 'group-card';
+
+        const title = document.createElement('div');
+        title.className = 'group-title';
+        title.innerText = "Group " + (index + 1);
+
+        const members = document.createElement('div');
+        members.className = 'student-list';
+        members.innerHTML = currentGroup.join('<br>');
+
+        card.appendChild(title);
+        card.appendChild(members);
+
+        gridWrapper.appendChild(card);
+    });
+
+    if (studentsWithUnresolvedConflicts.length > 0) {
+
+        const warning = document.createElement('div');
+        warning.style.marginTop = "15px";
+        warning.style.padding = "12px";
+        warning.style.background = "#fdecea";
+        warning.style.borderLeft = "5px solid #e74c3c";
+        warning.style.borderRadius = "4px";
+        warning.style.color = "#c0392b";
+        warning.style.fontWeight = "bold";
+        warning.innerText =
+            "Couldn't fully separate: " +
+            studentsWithUnresolvedConflicts.join(", ") +
+            ". Try a different group size or fewer separation constraints.";
+
+        displayArea.appendChild(warning);
+    }
+}
+
+</script>
+
+</body>
+</html>
